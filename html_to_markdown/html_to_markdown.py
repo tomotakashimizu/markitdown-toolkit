@@ -6,9 +6,10 @@ HTMLファイルをMarkdownに変換するPythonスクリプト。
 """
 
 import os
-import subprocess
 import argparse
 from pathlib import Path
+from typing import Tuple
+from markitdown import MarkItDown
 
 
 def convert_html_to_markdown(input_path, output_path, recursive=False):
@@ -95,21 +96,27 @@ def convert_file(html_file, output_file):
     Returns:
         bool: 変換が成功したかどうか
     """
-    # markitdownコマンドを実行
-    cmd = ["markitdown", str(html_file), "-o", str(output_file)]
-    
     try:
-        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        # MarkItDownインスタンスを作成
+        md = MarkItDown()
+        
+        # HTMLをMarkdownに変換
+        result = md.convert(html_file)
+        markdown_content = result.text_content
+        
+        # 結果を出力ファイルに書き込み
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(markdown_content)
+            
         print(f"変換成功: {html_file} -> {output_file}")
         return True
-    except subprocess.CalledProcessError as e:
+    except ImportError:
+        print("エラー: 'markitdown' ライブラリがインストールされていません。")
+        print(f"インストール方法: pip install 'markitdown[all]~=0.1.0a1'")
+        return False
+    except Exception as e:
         print(f"変換失敗: {html_file}")
         print(f"エラー: {e}")
-        if e.stderr:
-            print(f"エラー詳細: {e.stderr}")
-        return False
-    except FileNotFoundError:
-        print("エラー: 'markitdown' コマンドが見つかりません。インストールされているか確認してください。")
         return False
 
 
